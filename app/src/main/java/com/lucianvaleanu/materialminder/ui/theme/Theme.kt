@@ -1,4 +1,4 @@
-package com.valeanulucian.materialminder.ui.theme
+package com.lucianvaleanu.materialminder.ui.theme
 
 import android.app.Activity
 import android.os.Build

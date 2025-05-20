@@ -1,4 +1,4 @@
-package com.valeanulucian.materialminder.ui.components.construction_item
+package com.lucianvaleanu.materialminder.ui.components.construction_item
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -45,8 +45,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.valeanulucian.materialminder.R
-import com.valeanulucian.materialminder.model.ConstructionItem
+import com.lucianvaleanu.materialminder.R
+import com.lucianvaleanu.materialminder.model.ConstructionItem
+import java.math.BigDecimal
 
 @Composable
 fun ConstructionItemDetailScreen(
@@ -56,7 +57,6 @@ fun ConstructionItemDetailScreen(
     onDelete: (Int) -> Unit
 ) {
     var updatedName by remember { mutableStateOf(constructionItem.name) }
-    var updatedDescription by remember { mutableStateOf(constructionItem.description) }
     var updatedPrice by remember { mutableStateOf(constructionItem.price.toString()) }
     var updatedImageUri by remember { mutableStateOf(constructionItem.image) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -96,15 +96,6 @@ fun ConstructionItemDetailScreen(
             value = updatedName,
             onValueChange = { updatedName = it },
             label = { Text("Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = updatedDescription,
-            onValueChange = { updatedDescription = it },
-            label = { Text("Description") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -180,8 +171,7 @@ fun ConstructionItemDetailScreen(
                         ConstructionItem(
                             id = constructionItem.id,
                             name = updatedName,
-                            description = updatedDescription,
-                            price = updatedPrice.toDoubleOrNull() ?: 0.0,
+                            price = updatedPrice.toBigDecimalOrNull() ?: BigDecimal.ZERO,
                             image = updatedImageUri
                         )
                     )

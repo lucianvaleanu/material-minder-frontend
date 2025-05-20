@@ -1,4 +1,4 @@
-package com.valeanulucian.materialminder.ui.components.construction_item
+package com.lucianvaleanu.materialminder.ui.components.construction_item
 
 import android.net.Uri
 import androidx.compose.foundation.Image
@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.valeanulucian.materialminder.R
-import com.valeanulucian.materialminder.model.ConstructionItem
+import com.lucianvaleanu.materialminder.R
+import com.lucianvaleanu.materialminder.model.ConstructionItem
 
 
 

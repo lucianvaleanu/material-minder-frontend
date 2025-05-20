@@ -1,4 +1,4 @@
-package com.valeanulucian.materialminder
+package com.lucianvaleanu.materialminder
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

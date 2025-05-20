@@ -1,4 +1,4 @@
-package com.valeanulucian.materialminder.ui.theme
+package com.lucianvaleanu.materialminder.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

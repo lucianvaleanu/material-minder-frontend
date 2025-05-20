@@ -1,4 +1,4 @@
-package com.valeanulucian.materialminder
+package com.lucianvaleanu.materialminder
 
 import org.junit.Test
 

@@ -1,55 +1,89 @@
-package com.valeanulucian.materialminder.viewmodel
+package com.lucianvaleanu.materialminder.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.valeanulucian.materialminder.model.Project
-import com.valeanulucian.materialminder.repository.IProjectsRepository
-import com.valeanulucian.materialminder.repository.InMemoryProjectsRepository
+import androidx.lifecycle.viewModelScope
+import com.lucianvaleanu.materialminder.model.Project
+import com.lucianvaleanu.materialminder.model.User
+import com.lucianvaleanu.materialminder.repository.ProjectRepository
+import com.lucianvaleanu.materialminder.service.api.ProjectApiService
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProjectViewModel(
-    private val repository: IProjectsRepository = InMemoryProjectsRepository()
-) : ViewModel() {
 
+@HiltViewModel
+class ProjectViewModel @Inject constructor(
+    private val repository: ProjectRepository,
+    private val apiService: ProjectApiService,
+    private val user: User
+) : ViewModel(){
     private val _projects = MutableStateFlow<List<Project>>(emptyList())
-    val projects: StateFlow<List<Project>> = _projects
+    val projects: StateFlow<List<Project>> = _projects.asStateFlow()
 
     init{
         loadProjects()
     }
 
     private fun loadProjects(){
-        _projects.update { repository.getAllProjects() }
-    }
-
-    fun addProject(project: Project) {
-        project.id = getFirstFreeID()
-        repository.addProject(project)
-        _projects.update { it + project }
-    }
-
-    fun getProject(id: Int): Project? {
-        return repository.getProjectById(id)
-    }
-    fun updateProject(project: Project) {
-        repository.updateProject(project)
-        _projects.update { it.map { if (it.id == project.id) project else it } }
-    }
-
-
-    fun deleteProject(id: Int) {
-        repository.deleteProjectByID(id)
-        _projects.update { it.filterNot { it.id == id } }
-    }
-
-    private fun getFirstFreeID(): Int {
-        val ids = repository.getAllProjects().map{it.id}.toSet()
-        var freeId = 1
-        while (freeId in ids) {
-            freeId++
+        viewModelScope.launch(Dispatchers.IO){
+            try{
+                val items = repository.getAllProjectsByUserId(user)
+                if(items.isEmpty()){
+                    loadProjectsFromApi()
+                }else{
+                    _projects.value = items
+                }
+            } catch (e: Exception){
+                // Handle error
+            }
         }
-        return freeId
     }
 
+    private fun loadProjectsFromApi() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val items = apiService.getAllProjects()
+                repository.insertProjects(items)
+                _projects.value = items
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+    fun insertProjects(items: List<Project>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.insertProjects(items)
+                _projects.value = repository.getAllProjectsByUserId(user)
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun deleteProjectById(projectId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.deleteProjectById(projectId)
+                _projects.value = repository.getAllProjectsByUserId(user)
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun getAllProjectsByUserId() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val items = repository.getAllProjectsByUserId(user)
+                _projects.value = items
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
 }

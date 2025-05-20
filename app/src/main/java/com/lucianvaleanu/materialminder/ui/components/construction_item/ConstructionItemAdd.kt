@@ -12,8 +12,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.net.Uri
-import com.valeanulucian.materialminder.R
-import com.valeanulucian.materialminder.model.ConstructionItem
+import com.lucianvaleanu.materialminder.R
+import com.lucianvaleanu.materialminder.model.ConstructionItem
+import java.math.BigDecimal
 
 @Composable
 fun AddConstructionItem(onCancel: () -> Unit, onConfirm: (ConstructionItem) -> Unit) {
@@ -81,19 +82,6 @@ fun AddConstructionItem(onCancel: () -> Unit, onConfirm: (ConstructionItem) -> U
             Text("Add Image")
         }
 
-//        // TODO Display selected image if available
-//        imageUri?.let { uri ->
-//            Image(
-//                painter = rememberAsyncImagePainter(uri),
-//                contentDescription = "Selected Image",
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .aspectRatio(1f)
-//                    .clip(MaterialTheme.shapes.medium)
-//                    .border(1.dp, Color.Gray, MaterialTheme.shapes.medium)
-//            )
-//        }
-
         Spacer(modifier = Modifier.weight(1f))
 
         Row(
@@ -111,8 +99,7 @@ fun AddConstructionItem(onCancel: () -> Unit, onConfirm: (ConstructionItem) -> U
                         ConstructionItem(
                             id = 0,
                             name = name,
-                            description = description,
-                            price = price.toDoubleOrNull() ?: 0.0,
+                            price = price.toBigDecimalOrNull() ?: BigDecimal.ZERO,
                             image = imageUri?.toString() ?: ""
                         )
                     )
