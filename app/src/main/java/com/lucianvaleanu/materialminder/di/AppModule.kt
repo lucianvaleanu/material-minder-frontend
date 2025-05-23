@@ -10,6 +10,7 @@ import com.lucianvaleanu.materialminder.repository.database.dao.ConstructionItem
 import com.lucianvaleanu.materialminder.repository.database.dao.ProjectDAO
 import com.lucianvaleanu.materialminder.repository.database.dao.ProjectItemDAO
 import com.lucianvaleanu.materialminder.service.api.ConstructionItemApiService
+import com.lucianvaleanu.materialminder.service.api.ProjectApiService
 import com.lucianvaleanu.materialminder.service.api.RetrofitInstance
 import dagger.Module
 import dagger.Provides
@@ -76,6 +77,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDefaultUser(): User {
-        return User(id = 0, email = "user@email.com", password = "pass", createdAt = Instant.now()) // Replace "name" with actual fields in your User model
+        return User(id = 1, email = "user@email.com", password = "pass", createdAt = Instant.now()) // Replace "name" with actual fields in your User model
+    }
+
+    @Provides
+    @Singleton
+    fun provideProjectApiService(): ProjectApiService {
+        return RetrofitInstance.projectApi
     }
 }

@@ -4,8 +4,8 @@ import com.lucianvaleanu.materialminder.model.Project
 import retrofit2.http.*
 
 interface ProjectApiService {
-    @GET("projects")
-    suspend fun getAllProjects(): List<Project>
+    @GET("projects/user/{userId}")
+    suspend fun getAllProjectsByUserId(@Path("id") id:Int): List<Project>
 
     @GET("projects/{id}")
     suspend fun getProjectById(@Path("id") id: Int): Project?

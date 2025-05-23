@@ -23,15 +23,24 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.lucianvaleanu.materialminder.model.ConstructionItem
+import com.lucianvaleanu.materialminder.model.ProjectItem
 import com.lucianvaleanu.materialminder.ui.theme.MaterialMinderTheme
 import com.lucianvaleanu.materialminder.ui.components.*
 import com.lucianvaleanu.materialminder.ui.components.construction_item.ConstructionItemList
 import com.lucianvaleanu.materialminder.ui.components.construction_item.ConstructionItemDetailScreen
+import com.lucianvaleanu.materialminder.ui.components.projects.AddProjectScreen
+import com.lucianvaleanu.materialminder.ui.components.projects.ProjectConstructionItemsScreen
+import com.lucianvaleanu.materialminder.ui.components.projects.ProjectDetailScreen
+import com.lucianvaleanu.materialminder.ui.components.projects.ProjectsList
+import com.lucianvaleanu.materialminder.ui.components.projects.SelectConstructionItemsScreen
 import com.lucianvaleanu.materialminder.viewmodel.ConstructionItemViewModel
+import com.lucianvaleanu.materialminder.viewmodel.ProjectViewModel
 import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val constructionItemViewModel: ConstructionItemViewModel by viewModels<ConstructionItemViewModel>()
+    private val projectViewModel: ProjectViewModel by viewModels<ProjectViewModel>()
+
     companion object {
         private var appContext: Context? = null
     }
@@ -45,7 +54,7 @@ class MainActivity : ComponentActivity() {
                 MaterialMinder(
                     modifier = Modifier.fillMaxSize(),
                     constructionItemViewModel = constructionItemViewModel,
-
+                    projectViewModel = projectViewModel
                     )
             }
         }
@@ -56,76 +65,88 @@ class MainActivity : ComponentActivity() {
 fun MaterialMinder(
     modifier: Modifier = Modifier,
     constructionItemViewModel: ConstructionItemViewModel,
+    projectViewModel: ProjectViewModel,
     ) {
     val navController = rememberNavController()
 
     val constructionObjectsList by constructionItemViewModel.constructionItems.collectAsState()
-
+    val projectsList by projectViewModel.projects.collectAsState()
     var shouldShowOnboarding by remember { mutableStateOf(true) }
 
     Surface(modifier = modifier) {
         if (shouldShowOnboarding) {
             OnboardingScreen(onTimeout = { shouldShowOnboarding = false })
         } else {
-            NavHost(navController = navController, startDestination = "constructionObjects") {
-//                composable("projects") {
-//                    ProjectsList(
-//                        projectsList = projectsList,
-//                        navController = navController,
-//                        onDelete = { project -> projectViewModel.deleteProject(project.id) }
-//                    )
-//                }
-//                composable("addProject") {
-//                    AddProjectScreen(
-//                        navController,
-//                        onAddProject = { project -> projectViewModel.insertProjects(listOf(project)) },
-//                        onCancel = { navController.popBackStack() }
-//                    )
-//                }
-//                composable("selectMaterials") {
-//                    SelectConstructionItemsScreen(
-//                        navController = navController,
-//                        constructionObjectsList = constructionObjectsList,
-//                        onConfirm = { selectedObjects ->
-//                            navController.previousBackStackEntry?.savedStateHandle?.set("selectedMaterials", selectedObjects)
-//                            navController.popBackStack()
-//                        },
-//                        onCancel = { navController.popBackStack() }
-//                    )
-//                }
-//                composable(
-//                    "projectDetail/{projectId}",
-//                    arguments = listOf(navArgument("projectId") {
-//                        type = NavType.IntType
-//                    })
-//                ) { backStackEntry ->
-//                    val projectId = backStackEntry.arguments?.getInt("projectId")
-//                    val project = projectId?.let { projectViewModel.getProjectById(it) }
-//
-//                    if (project != null) {
-//                        ProjectDetailScreen(
-//                            project = project,
-//                            onConfirm = { updatedProject -> projectViewModel.updateProject(updatedProject) },
-//                            navController = navController
-//                        )
-//                    }
-//                }
-//
-//                composable(
-//                    "projectItems/{projectId}",
-//                    arguments = listOf(navArgument("projectId") { type = NavType.IntType })
-//                ) { backStackEntry ->
-//                    val projectId = backStackEntry.arguments?.getInt("projectId")
-//                    val project = projectId?.let { projectViewModel.getProjectById(it) }
-//
-//                    if (project != null) {
-//                        ProjectConstructionItemsScreen(
-//                            project = project,
-//                            navController = navController
-//                        )
-//                    }
-//                }
-//
+            NavHost(navController = navController, startDestination = "projects") {
+                composable("projects") {
+                    ProjectsList(
+                        projectsList = projectsList,
+                        navController = navController,
+                        onDelete = { project -> projectViewModel.deleteProjectById(project.id) }
+                    )
+                }
+                composable("addProject") {
+                    AddProjectScreen(
+                        navController = navController,
+                        onAddProject = { project, selectedMaterials ->
+                            projectViewModel.addProjectWithItems(project, selectedMaterials)
+                            navController.popBackStack() // Navigate back after adding the project
+                        },
+                        onCancel = { navController.popBackStack() }
+                    )
+                }
+
+                composable("selectMaterials") {
+                    SelectConstructionItemsScreen(
+                        navController = navController,
+                        constructionObjectsList = constructionObjectsList,
+                        projectItems = mutableListOf(),
+                        onCancel = { navController.popBackStack() },
+                        onConfirm = { selectedItems ->
+                            navController.previousBackStackEntry?.savedStateHandle?.set("selectedMaterials", selectedItems)
+                            navController.popBackStack() // Navigate back after selecting materials
+                        }
+                    )
+                }
+                composable(
+                    "projectDetail/{projectId}",
+                    arguments = listOf(navArgument("projectId") {
+                        type = NavType.IntType
+                    })
+                ) { backStackEntry ->
+                    val projectId = backStackEntry.arguments?.getInt("projectId")
+                    val project = projectId?.let { projectViewModel.getProjectById(it) }
+
+                    if (project != null) {
+                        ProjectDetailScreen(
+                            project = project,
+                            onConfirm = { /*updatedProject -> projectViewModel.updateProject(updatedProject)*/ },
+                            navController = navController
+                        )
+                    }
+                }
+
+                composable(
+                    "projectItems/{projectId}",
+                    arguments = listOf(navArgument("projectId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val projectId = backStackEntry.arguments?.getInt("projectId")
+                    val project = projectId?.let { projectViewModel.getProjectById(it) }
+                    var objectsList = emptyList<ProjectItem>()
+                    LaunchedEffect(project) {
+                        project?.let {
+                            objectsList = projectViewModel.getAllProjectItemsByProjectId(it.id)
+                        }
+                    }
+                    if (project != null) {
+                        ProjectConstructionItemsScreen(
+                            project = project,
+                            navController = navController,
+                            objectsList = objectsList,
+                        )
+                    }
+                }
+
                 composable("constructionObjects") {
                     ConstructionItemList(
                         constructionObjectsList = constructionObjectsList,

@@ -22,7 +22,7 @@ import androidx.room.ForeignKey
     ]
 )
 data class ProjectItem(
-    val projectId: Int,
+    var projectId: Int,
     val itemId: Int,
     val quantity: Int
 )
