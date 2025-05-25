@@ -58,7 +58,6 @@ fun AddProjectScreen(
     var selectedMaterials by rememberSaveable { mutableStateOf<List<ProjectItem>>(emptyList()) }
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
 
-    // Observe selected materials from the navigation back stack
     val savedMaterials = navController.currentBackStackEntry
         ?.savedStateHandle
         ?.getLiveData<List<ProjectItem>>("selectedMaterials")
@@ -173,7 +172,7 @@ fun AddProjectScreen(
             FloatingActionButton(
                 onClick = {
                     val newProject = Project(
-                        id = 0,
+                        id = null,
                         title = title,
                         projectDate = date,
                         userId = 1

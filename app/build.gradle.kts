@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.lucianvaleanu.materialminder"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.lucianvaleanu.materialminder"
@@ -57,7 +57,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.navigation.runtime.android)
     val room_version = "2.7.1"
     implementation("androidx.room:room-runtime:$room_version")
     ksp("androidx.room:room-compiler:$room_version")

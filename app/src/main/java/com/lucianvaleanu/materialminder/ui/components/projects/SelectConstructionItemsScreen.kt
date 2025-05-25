@@ -1,27 +1,16 @@
-package com.lucianvaleanu.materialminder.ui.components.projects
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
-import com.lucianvaleanu.materialminder.R
 import com.lucianvaleanu.materialminder.model.ConstructionItem
 import com.lucianvaleanu.materialminder.model.ProjectItem
+import com.lucianvaleanu.materialminder.ui.components.construction_item.ConstructionItemCardWithCount
 
 @Composable
 fun SelectConstructionItemsScreen(
@@ -38,6 +27,10 @@ fun SelectConstructionItemsScreen(
         )
     }
 
+    val filteredList = constructionObjectsList.filter {
+        it.name.contains(searchText, ignoreCase = true)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,79 +45,38 @@ fun SelectConstructionItemsScreen(
                 .padding(bottom = 20.dp)
         )
 
-        val filteredList = constructionObjectsList.filter {
-            it.name.contains(searchText, ignoreCase = true)
-        }
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+        LazyColumn(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(filteredList) { constructionObject ->
-                val quantity = selectedItems[constructionObject.id] ?: 0
-
-                ElevatedCard(
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
+            items(filteredList.chunked(2)) { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Image(
-                            painter = rememberAsyncImagePainter(constructionObject.image),
-                            contentDescription = constructionObject.name,
+                    rowItems.forEach { constructionObject ->
+                        val quantity = selectedItems[constructionObject.id] ?: 0
+                        Box(
                             modifier = Modifier
-                                .size(80.dp)
-                                .padding(bottom = 8.dp)
-                        )
-                        Text(
-                            text = constructionObject.name,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
+                                .weight(1f)
+                                .padding(8.dp)
                         ) {
-                            IconButton(onClick = {
-                                if (quantity > 0) {
+                            ConstructionItemCardWithCount(
+                                constructionItem = constructionObject,
+                                navController = navController,
+                                modifier = Modifier,
+                                initialCount = quantity,
+                                onCountChange = { newCount ->
                                     selectedItems = selectedItems.toMutableMap().apply {
-                                        put(constructionObject.id, quantity - 1)
+                                        constructionObject.id?.let { put(it, newCount) }
                                     }
                                 }
-                            }) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_remove_24),
-                                    contentDescription = "Remove"
-                                )
-                            }
-                            Text(
-                                text = quantity.toString(),
-                                modifier = Modifier.padding(horizontal = 8.dp)
                             )
-                            IconButton(onClick = {
-                                selectedItems = selectedItems.toMutableMap().apply {
-                                    put(constructionObject.id, quantity + 1)
-                                }
-                            }) {
-                                Icon(Icons.Default.Add, contentDescription = "Add")
-                            }
                         }
+                    }
+                    if (rowItems.size < 2) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -147,7 +99,7 @@ fun SelectConstructionItemsScreen(
                         quantity = quantity
                     )
                 }
-                onConfirm(updatedItems)
+                navController.previousBackStackEntry?.savedStateHandle?.set("selectedMaterials", updatedItems)
                 navController.popBackStack()
             }) {
                 Text("Confirm")

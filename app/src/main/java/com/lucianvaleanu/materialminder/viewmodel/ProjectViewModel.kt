@@ -118,7 +118,11 @@ class ProjectViewModel @Inject constructor(
             try {
                 repository.insertProjects(listOf(project))
                 val projectId = repository.getAllProjectsByUserId(user).last().id
-                items.forEach { it.projectId = projectId }
+                items.forEach {
+                    if (projectId != null) {
+                        it.projectId = projectId
+                    }
+                }
                 repository.insertProjectItems(items)
                 _projects.value = repository.getAllProjectsByUserId(user)
             } catch (e: Exception) {

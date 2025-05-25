@@ -1,6 +1,7 @@
 package com.lucianvaleanu.materialminder
 
-import AddConstructionItem
+import com.lucianvaleanu.materialminder.ui.components.construction_item.AddConstructionItem
+import SelectConstructionItemsScreen
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -32,10 +33,10 @@ import com.lucianvaleanu.materialminder.ui.components.projects.AddProjectScreen
 import com.lucianvaleanu.materialminder.ui.components.projects.ProjectConstructionItemsScreen
 import com.lucianvaleanu.materialminder.ui.components.projects.ProjectDetailScreen
 import com.lucianvaleanu.materialminder.ui.components.projects.ProjectsList
-import com.lucianvaleanu.materialminder.ui.components.projects.SelectConstructionItemsScreen
 import com.lucianvaleanu.materialminder.viewmodel.ConstructionItemViewModel
 import com.lucianvaleanu.materialminder.viewmodel.ProjectViewModel
 import dagger.hilt.android.AndroidEntryPoint
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val constructionItemViewModel: ConstructionItemViewModel by viewModels<ConstructionItemViewModel>()
@@ -55,7 +56,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     constructionItemViewModel = constructionItemViewModel,
                     projectViewModel = projectViewModel
-                    )
+                )
             }
         }
     }
@@ -66,7 +67,7 @@ fun MaterialMinder(
     modifier: Modifier = Modifier,
     constructionItemViewModel: ConstructionItemViewModel,
     projectViewModel: ProjectViewModel,
-    ) {
+) {
     val navController = rememberNavController()
 
     val constructionObjectsList by constructionItemViewModel.constructionItems.collectAsState()
@@ -82,7 +83,13 @@ fun MaterialMinder(
                     ProjectsList(
                         projectsList = projectsList,
                         navController = navController,
-                        onDelete = { project -> projectViewModel.deleteProjectById(project.id) }
+                        onDelete = { project ->
+                            project.id?.let { it1 ->
+                                projectViewModel.deleteProjectById(
+                                    it1
+                                )
+                            }
+                        }
                     )
                 }
                 composable("addProject") {
@@ -103,8 +110,10 @@ fun MaterialMinder(
                         projectItems = mutableListOf(),
                         onCancel = { navController.popBackStack() },
                         onConfirm = { selectedItems ->
-                            navController.previousBackStackEntry?.savedStateHandle?.set("selectedMaterials", selectedItems)
-                            navController.popBackStack() // Navigate back after selecting materials
+                            navController.previousBackStackEntry?.savedStateHandle?.set(
+                                "selectedMaterials",
+                                selectedItems
+                            )
                         }
                     )
                 }
@@ -132,67 +141,79 @@ fun MaterialMinder(
                 ) { backStackEntry ->
                     val projectId = backStackEntry.arguments?.getInt("projectId")
                     val project = projectId?.let { projectViewModel.getProjectById(it) }
-                    var objectsList = emptyList<ProjectItem>()
-                    LaunchedEffect(project) {
-                        project?.let {
-                            objectsList = projectViewModel.getAllProjectItemsByProjectId(it.id)
+                    val projectItems = remember { mutableStateOf<List<ProjectItem>>(emptyList()) }
+                    val constructionItems =
+                        remember { mutableStateOf<List<ConstructionItem>>(emptyList()) }
+
+                    LaunchedEffect(projectId) {
+                        if (projectId != null) {
+                            projectItems.value = projectViewModel.getAllProjectItemsByProjectId(projectId)
+                            // Map ProjectItems to ConstructionItems
+                            constructionItems.value = projectItems.value.mapNotNull { projectItem ->
+                                constructionItemViewModel.getItemById(projectItem.itemId)
+                            }
                         }
                     }
-                    if (project != null) {
-                        ProjectConstructionItemsScreen(
-                            project = project,
-                            navController = navController,
-                            objectsList = objectsList,
+
+                        if (project != null) {
+                            ProjectConstructionItemsScreen(
+                                project = project,
+                                navController = navController,
+                                objectsList = projectItems.value,
+                                constructionItems = constructionItems.value,
+                            )
+                        }
+                    }
+
+                    composable("constructionObjects") {
+                        ConstructionItemList(
+                            constructionObjectsList = constructionObjectsList,
+                            navController = navController
                         )
                     }
-                }
-
-                composable("constructionObjects") {
-                    ConstructionItemList(
-                        constructionObjectsList = constructionObjectsList,
-                        navController = navController
-                    )
-                }
-                composable("addConstructionObject") {
-                    AddConstructionItem(
-                        onCancel = { navController.popBackStack() },
-                        onConfirm = { newObject ->
-                            constructionItemViewModel.insertItems(listOf(newObject))
-                            navController.popBackStack()
-                        }
-                    )
-                }
-                composable(
-                    "constructionObjectDetail/{constructionObjectId}",
-                    arguments = listOf(navArgument("constructionObjectId") {
-                        type = NavType.IntType
-                    })
-                ) { backStackEntry ->
-                    val constructionObjectId = backStackEntry.arguments?.getInt("constructionObjectId")
-                    val constructionObject = remember(constructionObjectId) {
-                        mutableStateOf<ConstructionItem?>(null)
-                    }
-
-                    LaunchedEffect(constructionObjectId) {
-                        constructionObject.value = constructionObjectId?.let { constructionItemViewModel.getItemById(it) }
-                    }
-
-                    if(constructionObject.value != null) {
-                        ConstructionItemDetailScreen(
-                            constructionItem = constructionObject.value!!,
-                            navController = navController,
-                            onConfirm = { updatedObject ->
-                                constructionItemViewModel.updateItem(updatedObject)
-                                navController.popBackStack()
-                            },
-                            onDelete = { idToDelete ->
-                                constructionItemViewModel.deleteItemById(idToDelete)
+                    composable("addConstructionObject") {
+                        AddConstructionItem(
+                            onCancel = { navController.popBackStack() },
+                            onConfirm = { newObject ->
+                                constructionItemViewModel.insertItems(listOf(newObject))
                                 navController.popBackStack()
                             }
-                        )                    }
+                        )
+                    }
+                    composable(
+                        "constructionObjectDetail/{constructionObjectId}",
+                        arguments = listOf(navArgument("constructionObjectId") {
+                            type = NavType.IntType
+                        })
+                    ) { backStackEntry ->
+                        val constructionObjectId =
+                            backStackEntry.arguments?.getInt("constructionObjectId")
+                        val constructionObject = remember(constructionObjectId) {
+                            mutableStateOf<ConstructionItem?>(null)
+                        }
 
+                        LaunchedEffect(constructionObjectId) {
+                            constructionObject.value =
+                                constructionObjectId?.let { constructionItemViewModel.getItemById(it) }
+                        }
+
+                        if (constructionObject.value != null) {
+                            ConstructionItemDetailScreen(
+                                constructionItem = constructionObject.value!!,
+                                navController = navController,
+                                onConfirm = { updatedObject ->
+                                    constructionItemViewModel.updateItem(updatedObject)
+                                    navController.popBackStack()
+                                },
+                                onDelete = { idToDelete ->
+                                    constructionItemViewModel.deleteItemById(idToDelete)
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                    }
                 }
             }
         }
     }
-}

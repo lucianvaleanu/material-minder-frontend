@@ -76,7 +76,7 @@ fun ProjectsList(
                     Spacer(modifier = Modifier.height(20.dp))
                 }
 
-                items(projectsList, key = { it.id }) { project ->
+                items(projectsList, key = { it.id!! }) { project ->
                     ProjectListItem(
                         project = project,
                         onDelete = onDelete,

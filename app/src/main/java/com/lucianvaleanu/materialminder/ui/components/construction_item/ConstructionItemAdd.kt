@@ -1,3 +1,5 @@
+package com.lucianvaleanu.materialminder.ui.components.construction_item
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -19,7 +21,6 @@ import java.math.BigDecimal
 @Composable
 fun AddConstructionItem(onCancel: () -> Unit, onConfirm: (ConstructionItem) -> Unit) {
     var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -49,12 +50,6 @@ fun AddConstructionItem(onCancel: () -> Unit, onConfirm: (ConstructionItem) -> U
             label = { Text("Name") },
             value = name,
             onValueChange = { name = it },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            label = { Text("Description") },
-            value = description,
-            onValueChange = { description = it },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -97,7 +92,7 @@ fun AddConstructionItem(onCancel: () -> Unit, onConfirm: (ConstructionItem) -> U
                 onClick = {
                     onConfirm(
                         ConstructionItem(
-                            id = 0,
+                            id = null,
                             name = name,
                             price = price.toBigDecimalOrNull() ?: BigDecimal.ZERO,
                             image = imageUri?.toString() ?: ""

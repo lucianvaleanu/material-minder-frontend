@@ -11,7 +11,7 @@ import com.lucianvaleanu.materialminder.repository.database.dao.UserDAO
 
 @Database(
     entities = [ConstructionItem::class, Project::class, ProjectItem::class, User::class],
-    version = 1
+    version = 4
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

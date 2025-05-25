@@ -6,7 +6,7 @@ import java.math.BigDecimal
 
 @Entity(tableName = "construction_item")
 data class ConstructionItem(
-    @PrimaryKey val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int? = null,
     val name: String,
     val price: BigDecimal,
     val image: String

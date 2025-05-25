@@ -193,7 +193,7 @@ fun ConstructionItemDetailScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onDelete(constructionItem.id)
+                        constructionItem.id?.let { onDelete(it) }
                         showDeleteDialog = false
                     }
                 ) {

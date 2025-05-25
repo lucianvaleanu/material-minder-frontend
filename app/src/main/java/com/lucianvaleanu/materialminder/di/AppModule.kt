@@ -30,7 +30,9 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "material_minder_db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration(false)
+            .build()
     }
 
     @Provides
@@ -77,7 +79,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDefaultUser(): User {
-        return User(id = 1, email = "user@email.com", password = "pass", createdAt = Instant.now()) // Replace "name" with actual fields in your User model
+        return User(
+            id = 1,
+            email = "user@email.com",
+            password = "pass",
+            createdAt = Instant.now()
+        ) // Replace "name" with actual fields in your User model
     }
 
     @Provides

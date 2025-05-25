@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 1,
-    "identityHash": "3e8aa811d0684b17f887e20b5edfa009",
+    "version": 4,
+    "identityHash": "438799a8f028de1749b2fdcdb0b79f31",
     "entities": [
       {
         "tableName": "construction_item",
@@ -41,13 +41,12 @@
       },
       {
         "tableName": "project",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `title` TEXT NOT NULL, `projectDate` TEXT NOT NULL, `userId` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `title` TEXT NOT NULL, `projectDate` TEXT NOT NULL, `userId` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "title",
@@ -69,7 +68,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "id"
           ]
@@ -169,7 +168,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3e8aa811d0684b17f887e20b5edfa009')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '438799a8f028de1749b2fdcdb0b79f31')"
     ]
   }
 }
