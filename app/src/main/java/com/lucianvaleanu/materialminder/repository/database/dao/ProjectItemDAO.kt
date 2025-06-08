@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.lucianvaleanu.materialminder.model.ProjectItem
 
 @Dao
@@ -16,4 +17,10 @@ interface ProjectItemDAO {
 
     @Query("SELECT * FROM project_item WHERE projectId = :projectId")
     suspend fun getAllByProjectId(projectId: Int): List<ProjectItem>
+
+    @Update
+    suspend fun updateProjectItem(projectItem: ProjectItem)
+
+    @Query("DELETE FROM project_item WHERE projectId = :projectId")
+    suspend fun deleteAllByProjectId(projectId: Int)
 }

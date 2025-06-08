@@ -84,7 +84,7 @@ object AppModule {
             email = "user@email.com",
             password = "pass",
             createdAt = Instant.now()
-        ) // Replace "name" with actual fields in your User model
+        )
     }
 
     @Provides

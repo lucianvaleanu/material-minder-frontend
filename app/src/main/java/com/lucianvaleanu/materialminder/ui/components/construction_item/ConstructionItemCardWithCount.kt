@@ -1,22 +1,17 @@
 package com.lucianvaleanu.materialminder.ui.components.construction_item
 
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
@@ -27,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -49,19 +44,33 @@ import coil.compose.rememberAsyncImagePainter
 import com.lucianvaleanu.materialminder.R
 import com.lucianvaleanu.materialminder.model.ConstructionItem
 import androidx.core.net.toUri
-import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun ConstructionItemCardWithCount(
     constructionItem: ConstructionItem,
     modifier: Modifier = Modifier,
     navController: NavController,
-    initialCount: Int = 0,
+    initialCount: Int,
     onCountChange: (Int) -> Unit = {}
 ) {
     var count by remember { mutableIntStateOf(initialCount) }
     var showDialog by remember { mutableStateOf(false) }
-    var editingText by remember { mutableStateOf(count.toString()) }
+    var editingText by remember { mutableStateOf(initialCount.toString()) }
+
+    LaunchedEffect(initialCount) {
+        if (count != initialCount) {
+            count = initialCount
+            if (!showDialog) {
+                editingText = initialCount.toString()
+            }
+        }
+    }
+
+    LaunchedEffect(count) {
+        if (!showDialog && editingText != count.toString()) {
+            editingText = count.toString()
+        }
+    }
 
     ElevatedCard(
         colors = CardDefaults.elevatedCardColors(
@@ -70,69 +79,87 @@ fun ConstructionItemCardWithCount(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp)
             .clickable {
-                navController.navigate("constructionObjectDetail/${constructionItem.id}")
+                constructionItem.id?.let {
+                    navController.navigate("constructionObjectDetail/$it")
+                }
             },
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            val painter = if (constructionItem.image.isNotEmpty()) {
-                rememberAsyncImagePainter(Uri.parse(constructionItem.image))
-            } else {
-                painterResource(id = R.drawable.image_placeholder)
+        Column(modifier = Modifier.padding(12.dp)) {
+            val imageUri = try {
+                constructionItem.image.takeIf { it.isNotBlank() }?.toUri()
+            } catch (_: Exception) {
+                null
             }
 
             Image(
-                painter = painter,
-                contentDescription = null,
+                painter = if (imageUri != null) {
+                    rememberAsyncImagePainter(
+                        model = imageUri,
+                        error = painterResource(id = R.drawable.image_placeholder)
+                    )
+                } else {
+                    painterResource(id = R.drawable.image_placeholder)
+                },
+                contentDescription = constructionItem.name,
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .height(100.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp)),
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = constructionItem.name,
+                fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(8.dp),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Price: ${constructionItem.price} RON",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                IconButton(
-                    onClick = { if (count > 0) { count--; onCountChange(count) } }) {
-                    Icon(imageVector = ImageVector.vectorResource(R.drawable.baseline_remove_24), contentDescription = "Decrease")
-                }
-                if (count > 0) {
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .clickable {
-                                editingText = count.toString()
-                                showDialog = true
-                            }) {
-                        Text(
-                            text = count.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold
-                        )
+                IconButton(onClick = {
+                    if (count > 0) {
+                        val newCount = count - 1
+                        count = newCount
+                        onCountChange(newCount)
                     }
-                } else {
-                    Spacer(modifier = Modifier.width(32.dp))
+                }) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_remove_24),
+                        contentDescription = "Decrease count"
+                    )
                 }
-                IconButton(
-                    onClick = { count++; onCountChange(count) }) {
-                    Icon(Icons.Default.Add, contentDescription = "Increase")
+
+                Text(
+                    text = "$count",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.clickable {
+                        editingText = count.toString()
+                        showDialog = true
+                    }
+                )
+
+                IconButton(onClick = {
+                    val newCount = count + 1
+                    count = newCount
+                    onCountChange(newCount)
+                }) {
+                    Icon(Icons.Filled.Add, contentDescription = "Increase count")
                 }
             }
         }
@@ -141,49 +168,30 @@ fun ConstructionItemCardWithCount(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Set Quantity") },
+            title = { Text("Set Quantity for ${constructionItem.name}") },
             text = {
                 OutlinedTextField(
                     value = editingText,
-                    onValueChange = { newValue ->
-                        if (newValue.all { it.isDigit() }) editingText = newValue
-                    },
+                    onValueChange = { editingText = it.filter { char -> char.isDigit() } },
                     label = { Text("Quantity") },
                     singleLine = true
                 )
             },
             confirmButton = {
                 Button(onClick = {
-                    count = editingText.toIntOrNull()?.coerceAtLeast(0) ?: 0
-                    onCountChange(count)
+                    val newCount = editingText.toIntOrNull() ?: count
+                    count = newCount
+                    onCountChange(newCount)
                     showDialog = false
                 }) {
-                    Text("OK")
+                    Text("Confirm")
                 }
             },
             dismissButton = {
                 Button(onClick = { showDialog = false }) {
                     Text("Cancel")
                 }
-            })
+            }
+        )
     }
-
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewConstructionItemCardWithCount() {
-    val mockItem = ConstructionItem(
-        id = 1,
-        name = "Concrete Block",
-        image = "",
-        price = TODO(),
-        // Add other required fields if any
-    )
-    ConstructionItemCardWithCount(
-        constructionItem = mockItem,
-        navController = rememberNavController(),
-        initialCount = 2
-    )
 }

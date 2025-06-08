@@ -1,6 +1,5 @@
 package com.lucianvaleanu.materialminder.ui.components.construction_item
 
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -28,6 +27,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.lucianvaleanu.materialminder.R
 import com.lucianvaleanu.materialminder.model.ConstructionItem
+import androidx.core.net.toUri
 
 @Composable
 fun ConstructionItemCard(
@@ -57,7 +57,7 @@ fun ConstructionItemCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val painter = if (constructionItem.image.isNotEmpty()) {
-                rememberAsyncImagePainter(Uri.parse(constructionItem.image))
+                rememberAsyncImagePainter(constructionItem.image.toUri())
             } else {
                 painterResource(id = R.drawable.image_placeholder)
             }

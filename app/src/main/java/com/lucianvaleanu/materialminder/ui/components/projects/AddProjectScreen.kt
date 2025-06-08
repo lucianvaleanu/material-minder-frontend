@@ -13,15 +13,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,22 +36,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
-import com.lucianvaleanu.materialminder.model.User
 import com.lucianvaleanu.materialminder.R
 import com.lucianvaleanu.materialminder.model.Project
 import com.lucianvaleanu.materialminder.model.ProjectItem
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProjectScreen(
     navController: NavController,
@@ -116,38 +121,62 @@ fun AddProjectScreen(
         )
 
         if (showDatePicker) {
-            val context = LocalContext.current
-            android.app.DatePickerDialog(
-                context,
-                { _, year, month, dayOfMonth ->
-                    date = LocalDate.of(year, month + 1, dayOfMonth)
-                    showDatePicker = false
+            val customHighlightColor = Color(0xFFE0B500)
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            )
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                            }
+                            showDatePicker = false
+                        }
+                    ) { Text("OK") }
                 },
-                date.year,
-                date.monthValue - 1,
-                date.dayOfMonth
-            ).show()
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                DatePicker(
+                    state = datePickerState,
+                    colors = DatePickerDefaults.colors(
+                        selectedDayContainerColor = customHighlightColor,
+                        selectedYearContainerColor = customHighlightColor,
+                        selectedDayContentColor = MaterialTheme.colorScheme.primary,
+                        selectedYearContentColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        Button(
+        FloatingActionButton(
             onClick = { navController.navigate("selectMaterials") },
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
                 .padding(8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = MaterialTheme.colorScheme.primary
-            )
+            shape = RoundedCornerShape(12.dp),
+            containerColor = Color.White,
+            contentColor = MaterialTheme.colorScheme.primary,
+            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
         ) {
-            Icon(
-                imageVector = ImageVector.vectorResource(id = R.drawable.wheelbarrow),
-                contentDescription = "Add materials",
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Add materials")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.wheelbarrow),
+                    contentDescription = "Add materials",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Add materials")
+            }
         }
 
         Spacer(modifier = Modifier.height(40.dp))

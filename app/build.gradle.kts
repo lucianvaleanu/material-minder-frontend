@@ -57,6 +57,8 @@ android {
 }
 
 dependencies {
+    implementation("androidx.compose.material:material-icons-core:1.7.8") // Or the version aligned with your Compose BOM
+    implementation("androidx.compose.material:material-icons-extended:1.7.8") // Or the version aligned with your Compose BOM
     val room_version = "2.7.1"
     implementation("androidx.room:room-runtime:$room_version")
     ksp("androidx.room:room-compiler:$room_version")

@@ -20,9 +20,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -36,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -48,6 +48,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.lucianvaleanu.materialminder.R
 import com.lucianvaleanu.materialminder.model.ConstructionItem
 import java.math.BigDecimal
+import androidx.core.net.toUri
 
 @Composable
 fun ConstructionItemDetailScreen(
@@ -76,17 +77,19 @@ fun ConstructionItemDetailScreen(
         Spacer(modifier = Modifier.height(30.dp))
 
         val painter = if (updatedImageUri.isNotEmpty()) {
-            rememberAsyncImagePainter(Uri.parse(updatedImageUri))
+            rememberAsyncImagePainter(updatedImageUri.toUri())
         } else {
             painterResource(id = R.drawable.image_placeholder)
         }
+        val imageShape = RoundedCornerShape(12.dp)
 
         Image(
             painter = painter,
             contentDescription = null,
             modifier = Modifier
                 .size(150.dp)
-                .clip(RoundedCornerShape(12.dp)),
+                .shadow(elevation = 6.dp, shape = imageShape, clip = false)
+                .clip(imageShape),
             contentScale = ContentScale.Crop
         )
 
@@ -111,44 +114,52 @@ fun ConstructionItemDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
+        Column(
+            modifier = Modifier.fillMaxWidth(0.66f),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Button(
+            FloatingActionButton(
                 onClick = { imagePickerLauncher.launch("image/*") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.padding(horizontal = 8.dp)
+                containerColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth(),
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
             ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_file_upload_24),
-                    contentDescription = "Change Image",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Change Image")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_file_upload_24),
+                        contentDescription = "Change Image",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Change Image")
+                }
             }
 
-            Button(
+            FloatingActionButton(
                 onClick = {
                     showDeleteDialog = true
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.padding(horizontal = 8.dp)
+                containerColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth(),
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete object",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Delete")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete object",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Delete")
+                }
             }
         }
 
@@ -163,7 +174,7 @@ fun ConstructionItemDetailScreen(
                 containerColor = MaterialTheme.colorScheme.onPrimary,
                 contentColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Cancel")
             }
             FloatingActionButton(
                 onClick = {
@@ -179,7 +190,7 @@ fun ConstructionItemDetailScreen(
                 containerColor = MaterialTheme.colorScheme.onPrimary,
                 contentColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(imageVector = Icons.Default.Check, contentDescription = null)
+                Icon(imageVector = Icons.Default.Check, contentDescription = "Confirm")
             }
         }
     }
@@ -197,7 +208,7 @@ fun ConstructionItemDetailScreen(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("Delete")
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {

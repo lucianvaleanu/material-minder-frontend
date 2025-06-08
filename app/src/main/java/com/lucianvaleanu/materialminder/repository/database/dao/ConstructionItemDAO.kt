@@ -22,4 +22,10 @@ interface ConstructionItemDAO {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateItem(item: ConstructionItem)
+
+    @Query("SELECT * FROM construction_item WHERE name LIKE '%' || :query || '%'")
+    suspend fun searchByName(query: String): List<ConstructionItem>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertOneAndGetId(item: ConstructionItem): Long
 }

@@ -1,6 +1,5 @@
 package com.lucianvaleanu.materialminder.ui.components.projects
 
-import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,14 +12,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,19 +32,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.lucianvaleanu.materialminder.R
 import com.lucianvaleanu.materialminder.model.Project
-import java.time.LocalDate
+import java.time.Instant
+import java.time.ZoneId
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectDetailScreen(
     project: Project,
@@ -86,54 +91,79 @@ fun ProjectDetailScreen(
         )
 
         if (showDatePicker) {
-            val context = LocalContext.current
+            val customHighlightColor = Color(0xFFE0B500)
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = updatedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            )
             DatePickerDialog(
-                context,
-                { _, year, month, dayOfMonth ->
-                    updatedDate = LocalDate.of(year, month + 1, dayOfMonth)
-                    showDatePicker = false
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                updatedDate = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                            }
+                            showDatePicker = false
+                        }
+                    ) { Text("OK") }
                 },
-                updatedDate.year,
-                updatedDate.monthValue - 1,
-                updatedDate.dayOfMonth
-            ).show()
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                DatePicker(
+                    state = datePickerState,
+                    colors = DatePickerDefaults.colors(
+                        selectedDayContainerColor = customHighlightColor,
+                        selectedYearContainerColor = customHighlightColor,
+                        selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+                        selectedYearContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
+            }
         }
 
-        Column(modifier = Modifier.fillMaxWidth()){
-            Button(
-                onClick = { navController.navigate("projectItems/${project.id}") },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .clip(RoundedCornerShape(12.dp))
-                    .padding(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            FloatingActionButton(
+                onClick = { project.id?.let { navController.navigate("projectItems/$it") } },
+                modifier = Modifier.padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                containerColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.primary,
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
             ) {
-                Text(text = "View Items")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Text(text = "View Items")
+                }
             }
 
-            Button(
+            FloatingActionButton(
                 onClick = {
-                    navController.navigate("selectMaterials") {
-                        //TODO : Pass the project ID to the SelectConstructionItemsScreen
-                        navController.popBackStack()
-                    }
+                    project.id?.let { navController.navigate("changeMaterials/$it") }
                 },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .clip(RoundedCornerShape(12.dp))
-                    .padding(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
+                modifier = Modifier.padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                containerColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.primary,
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
             ) {
-                Text(text = "Change Items")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Text(text = "Change Items")
+                }
             }
         }
-
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -157,13 +187,11 @@ fun ProjectDetailScreen(
 
             FloatingActionButton(
                 onClick = {
-                    //TODO: implement the conjoined table for project and construction items
                     val updatedProject = project.copy(
                         title = updatedTitle,
                         projectDate = updatedDate
                     )
                     onConfirm(updatedProject)
-                    navController.popBackStack()
                 },
                 containerColor = MaterialTheme.colorScheme.onPrimary,
                 contentColor = MaterialTheme.colorScheme.primary
